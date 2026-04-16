@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오버워치 단톡</title>
+    <title>ow</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -22,7 +22,6 @@
             overflow: hidden;
         }
 
-        /* 첫 화면: API 키 입력 모달 */
         #setup-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -38,8 +37,6 @@
             width: 90%;
             max-width: 400px;
         }
-
-        .modal-content h2 { margin-bottom: 30px; color: #333; }
 
         input[type="password"] {
             width: 100%; padding: 15px; margin-bottom: 20px;
@@ -201,7 +198,9 @@
         }
 
         function initChat() {
-            const keyInput = document.getElementById('api-key').value.trim();
+            const rawKey = document.getElementById('api-key').value;
+            // 입장 시에도 공백/줄바꿈 미리 제거
+            const keyInput = rawKey.replace(/[\r\n\s\t]/gm, "");
             if(!keyInput) return alert("키를 입력해 주세요!");
 
             chatChars = traits.map(t => ({ name: getRandomName(), trait: t }));
@@ -220,7 +219,7 @@
             const input = document.getElementById('user-msg');
             const rawKey = document.getElementById('api-key').value;
             
-            // API 키에서 공백, 줄바꿈 등을 완전히 제거하여 주소 오염 방지
+            // 전송 직전 키값에서 모든 불순물 제거 (가장 강력한 방어)
             const apiKey = rawKey.replace(/[\r\n\s\t]/gm, "");
             
             const text = input.value.trim();
@@ -229,7 +228,7 @@
             addMsg('user', '나', text);
             input.value = '';
 
-            // v1beta 주소와 정제된 apiKey 사용
+            // 가장 안정적인 gemini-1.5-flash 모델명 사용
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const prompt = `오버워치 단톡방 상황이야. 사용자가 "${text}"라고 했어.
@@ -245,9 +244,10 @@
                 });
 
                 if (!res.ok) {
-                    const errorData = await res.json();
-                    console.error("API Error:", errorData);
-                    throw new Error('API Response Error');
+                    const errorJson = await res.json();
+                    console.error("실제 에러 내용:", errorJson);
+                    // 404가 뜨면 주소나 모델명 문제, 400/403은 키 문제임
+                    throw new Error(`에러 발생 (코드: ${res.status})`);
                 }
 
                 const data = await res.json();
@@ -261,7 +261,7 @@
                 });
             } catch (e) {
                 console.error("Error Detail:", e);
-                addMsg('system', '', '연결 오류가 발생했습니다. 키에 공백이 없는지 확인해 주세요.');
+                addMsg('system', '', `연결 실패! 원인: ${e.message}. 키가 정확한지 확인해 주세요.`);
             }
         }
 
