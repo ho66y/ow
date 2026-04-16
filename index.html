@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ow</title>
+    <title>오버워치 단톡</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -201,8 +201,8 @@
         }
 
         function initChat() {
-            const key = document.getElementById('api-key').value.trim();
-            if(!key) return alert("키를 입력해 주세요!");
+            const keyInput = document.getElementById('api-key').value.trim();
+            if(!keyInput) return alert("키를 입력해 주세요!");
 
             chatChars = traits.map(t => ({ name: getRandomName(), trait: t }));
             document.getElementById('room-name').innerText = chatChars[0].name + " 외 " + (chatChars.length-1) + "명";
@@ -218,15 +218,20 @@
 
         async function sendMessage() {
             const input = document.getElementById('user-msg');
-            const apiKey = document.getElementById('api-key').value.trim();
+            const rawKey = document.getElementById('api-key').value;
+            
+            // API 키에서 공백, 줄바꿈 등을 완전히 제거하여 주소 오염 방지
+            const apiKey = rawKey.replace(/[\r\n\s\t]/gm, "");
+            
             const text = input.value.trim();
-            if(!text) return;
+            if(!text || !apiKey) return;
 
             addMsg('user', '나', text);
             input.value = '';
 
-            // v1beta로 주소 수정 완료
+            // v1beta 주소와 정제된 apiKey 사용
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
             const prompt = `오버워치 단톡방 상황이야. 사용자가 "${text}"라고 했어.
             아래 4명의 친구가 '반말'로 리액션해줘. 게임 용어를 적절히 섞어줘.
             1. ${chatChars[0].name}(분노) 2. ${chatChars[1].name}(이성) 3. ${chatChars[2].name}(막말/거친표현) 4. ${chatChars[3].name}(공감)
@@ -239,7 +244,11 @@
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
 
-                if (!res.ok) throw new Error('API Response Error');
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    console.error("API Error:", errorData);
+                    throw new Error('API Response Error');
+                }
 
                 const data = await res.json();
                 const replyText = data.candidates[0].content.parts[0].text;
@@ -251,7 +260,8 @@
                     }
                 });
             } catch (e) {
-                addMsg('system', '', '연결 오류가 발생했습니다. API 키와 모델 권한을 확인해 주세요.');
+                console.error("Error Detail:", e);
+                addMsg('system', '', '연결 오류가 발생했습니다. 키에 공백이 없는지 확인해 주세요.');
             }
         }
 
