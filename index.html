@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오버워치 단톡</title>
+    <title>ow</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -28,15 +28,13 @@
         #input-area { background: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; }
         .input-wrap { flex: 1; background: #f5f5f5; border-radius: 20px; display: flex; align-items: center; padding: 5px 15px; }
         #user-msg { flex: 1; border: none; background: transparent; padding: 8px 0; outline: none; font-size: 1rem; }
-        .input-icon { color: #888; cursor: pointer; font-size: 22px; }
         .send-icon { color: #333; cursor: pointer; font-size: 28px; }
     </style>
 </head>
 <body>
-
     <div id="setup-modal">
         <div class="modal-content">
-            <h2 style="font-family: 'Noto Sans KR';">대기실</h2>
+            <h2 style="font-family: 'Noto Sans KR';">오버워치 단톡방</h2>
             <input type="password" id="api-key" placeholder="Google Gemini API 키 입력">
             <button class="btn-start" onclick="initChat()">입장하기</button>
         </div>
@@ -44,22 +42,12 @@
 
     <div id="main-container">
         <div class="chat-header">
-            <div class="header-left">
-                <span class="material-icons icon">arrow_back</span>
-                <span class="header-title" id="room-name">단톡방</span>
-            </div>
-            <div class="header-right">
-                <span class="material-icons icon">search</span>
-                <span class="material-icons icon">menu</span>
-            </div>
+            <div class="header-left"><span class="material-icons icon">arrow_back</span><span class="header-title" id="room-name">단톡방</span></div>
+            <div class="header-right"><span class="material-icons icon">search</span><span class="material-icons icon">menu</span></div>
         </div>
         <div id="chat-window"></div>
         <div id="input-area">
-            <span class="material-icons input-icon">add_box</span>
-            <div class="input-wrap">
-                <input type="text" id="user-msg" onkeypress="if(event.keyCode==13) sendMessage()">
-                <span class="material-icons input-icon">sentiment_satisfied_alt</span>
-            </div>
+            <div class="input-wrap"><input type="text" id="user-msg" placeholder="메시지를 입력하세요" onkeypress="if(event.keyCode==13) sendMessage()"></div>
             <span class="material-icons send-icon" onclick="sendMessage()">arrow_circle_up</span>
         </div>
     </div>
@@ -69,20 +57,21 @@
         const traits = ["분노", "이성", "막말", "공감"];
 
         function getRandomName() {
-            const lNames = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임"];
-            const fNames = ["지호", "민서", "서준", "하윤", "도윤", "지민", "예준", "채원", "준서", "지우"];
+            const lNames = ["김","이","박","최","정","강","조","윤"];
+            const fNames = ["지호","민서","서준","하윤","도윤","지민"];
             return lNames[Math.floor(Math.random()*lNames.length)] + fNames[Math.floor(Math.random()*fNames.length)];
         }
 
         function initChat() {
             const rawKey = document.getElementById('api-key').value;
-            const keyInput = rawKey.replace(/[\r\n\s\t]/gm, "");
-            if(!keyInput) return alert("키를 입력해 주세요!");
+            const keyInput = rawKey.replace(/[\r\n\s\t]/gm, ""); // 모든 공백/줄바꿈 제거
+            if(!keyInput) return alert("키를 입력하세요!");
 
             chatChars = traits.map(t => ({ name: getRandomName(), trait: t }));
-            document.getElementById('room-name').innerText = chatChars[0].name + " 외 " + (chatChars.length-1) + "명";
+            document.getElementById('room-name').innerText = chatChars[0].name + " 외 3명";
             document.getElementById('setup-modal').style.display = 'none';
             document.getElementById('main-container').style.display = 'flex';
+            
             chatChars.forEach((c, i) => {
                 setTimeout(() => addMsg('system', '', `${c.name} 님이 입장했습니다.`), i * 150);
             });
@@ -90,18 +79,23 @@
 
         async function sendMessage() {
             const input = document.getElementById('user-msg');
-            const rawKey = document.getElementById('api-key').value;
-            const apiKey = rawKey.replace(/[\r\n\s\t]/gm, "");
+            const apiKey = document.getElementById('api-key').value.replace(/[\r\n\s\t]/gm, "");
             const text = input.value.trim();
             if(!text || !apiKey) return;
 
             addMsg('user', '나', text);
             input.value = '';
 
-            // 가장 표준적인 v1beta 경로와 모델명으로 재수정
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // 가장 안정적이고 무료인 gemini-pro 모델 주소
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
-            const prompt = `오버워치 단톡방 상황이야. 사용자가 "${text}"라고 했어. 아래 4명의 친구가 '반말'로 리액션해줘. 게임 용어를 적절히 섞어줘. 1. ${chatChars[0].name}(분노) 2. ${chatChars[1].name}(이성) 3. ${chatChars[2].name}(막말) 4. ${chatChars[3].name}(공감). 출력 형식: 이름: 대사`;
+            const prompt = `너는 오버워치 게임 단톡방의 4개 캐릭터야. 사용자가 "${text}"라고 했어.
+            각 성격에 맞춰 '반말'로 한 줄씩 리액션해줘. 게임 용어를 적절히 섞어줘.
+            1. ${chatChars[0].name}(분노)
+            2. ${chatChars[1].name}(이성적)
+            3. ${chatChars[2].name}(막말/거친표현)
+            4. ${chatChars[3].name}(공감)
+            출력 형식: "이름: 대사"`;
 
             try {
                 const res = await fetch(url, {
@@ -111,23 +105,18 @@
                 });
 
                 const data = await res.json();
-                
-                if (!res.ok) {
-                    console.log("Error Detail:", data);
-                    // 404가 뜨면 주소창에 친 모델명이랑 매칭이 안 된다는 뜻
-                    throw new Error(data.error ? data.error.message : '모델을 찾을 수 없습니다.');
-                }
+                if (!res.ok) throw new Error(data.error?.message || '연결 실패');
 
-                const replyText = data.candidates[0].content.parts[0].text;
-                replyText.split('\n').forEach((line, i) => {
+                const reply = data.candidates[0].content.parts[0].text;
+                reply.split('\n').forEach((line, i) => {
                     if(line.includes(':')) {
                         const [n, c] = line.split(':');
                         setTimeout(() => addMsg('bot', n.trim(), c.trim()), i * 500);
                     }
                 });
             } catch (e) {
-                console.error("Final Catch:", e);
-                addMsg('system', '', `오류: ${e.message}`);
+                console.error(e);
+                addMsg('system', '', `오류 발생: ${e.message}`);
             }
         }
 
