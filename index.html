@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ow</title>
+    <title>오버워치 단톡</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -39,7 +39,6 @@
             <button class="btn-start" onclick="initChat()">입장하기</button>
         </div>
     </div>
-
     <div id="main-container">
         <div class="chat-header">
             <div class="header-left"><span class="material-icons icon">arrow_back</span><span class="header-title" id="room-name">단톡방</span></div>
@@ -64,7 +63,7 @@
 
         function initChat() {
             const rawKey = document.getElementById('api-key').value;
-            const keyInput = rawKey.replace(/[\r\n\s\t]/gm, ""); // 모든 공백/줄바꿈 제거
+            const keyInput = rawKey.replace(/[\r\n\s\t]/gm, "");
             if(!keyInput) return alert("키를 입력하세요!");
 
             chatChars = traits.map(t => ({ name: getRandomName(), trait: t }));
@@ -86,14 +85,14 @@
             addMsg('user', '나', text);
             input.value = '';
 
-            // 가장 안정적이고 무료인 gemini-pro 모델 주소
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+            // 가장 최신이며 범용적인 모델 명칭으로 변경
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-            const prompt = `너는 오버워치 게임 단톡방의 4개 캐릭터야. 사용자가 "${text}"라고 했어.
-            각 성격에 맞춰 '반말'로 한 줄씩 리액션해줘. 게임 용어를 적절히 섞어줘.
+            const prompt = `오버워치 단톡방 상황이야. 사용자가 "${text}"라고 했어.
+            각 캐릭터 성격에 맞춰 '반말'로 한 줄씩 리액션해줘.
             1. ${chatChars[0].name}(분노)
             2. ${chatChars[1].name}(이성적)
-            3. ${chatChars[2].name}(막말/거친표현)
+            3. ${chatChars[2].name}(막말)
             4. ${chatChars[3].name}(공감)
             출력 형식: "이름: 대사"`;
 
@@ -115,8 +114,8 @@
                     }
                 });
             } catch (e) {
-                console.error(e);
                 addMsg('system', '', `오류 발생: ${e.message}`);
+                console.error(e);
             }
         }
 
